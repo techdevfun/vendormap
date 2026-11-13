@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-shop
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: acme-shop
+  template:
+    metadata:
+      labels:
+        app: acme-shop
+    spec:
+      nodeSelector:
+        accelerator: nvidia-tesla-t4
+      containers:
+        - name: web
+          image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/acme-shop:latest
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+        - name: db
+          image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/acme-shop-db:16

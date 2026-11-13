@@ -1,0 +1,139 @@
+# vendormap demo - real CLI output on the SYNTHETIC fixtures
+# (acme-shop: every layer single-vendor; diversified-shop: every
+#  layer split across two vendors. Scores are the fixtures' own.)
+
+$ vendormap init
+Created vendormap.json in /tmp/vendormap-demo/work.
+
+Next steps:
+  vendormap scan .            map this repo's vendors
+  vendormap check .           CI gate (exit 0/1/2)
+  vendormap explain . --category gpu
+
+# vendormap examples
+#
+# Two synthetic fixtures ship with vendormap so you can see a
+# SINGLE-POINT stack and a DIVERSIFIED stack side by side:
+#
+#   examples/acme-shop/        - every layer single-vendor (NVIDIA GPUs,
+#                                AWS, OpenAI, Cloudflare, Stripe).
+#                                `vendormap check` exits 2 here.
+#   examples/diversified-shop/ - each layer split across two vendors.
+#                                `vendormap check` exits 0 here.
+#
+# Both fixtures are SYNTHETIC: invented company names, invented
+# reference counts. Their scores are the fixtures' own, not real
+# measurements of any real company.
+
+
+$ vendormap scan examples/acme-shop
+vendormap scan: examples/acme-shop
+
+CATEGORY     VENDOR           REFS  SHARE  SCORE  VERDICT       TOP FILES
+----------------------------------------------------------------------------------------------------
+cloud        aws              8     100%   100    SINGLE-POINT  .env.example, package-lock.json
+gpu          nvidia           3     100%   100    SINGLE-POINT  k8s/deployment.yaml, src/app.py
+model        openai           4     100%   100    SINGLE-POINT  .env.example, package-lock.json
+registry     ecr              3     100%   100    SINGLE-POINT  Dockerfile, k8s/deployment.yaml
+identity     auth0            4     100%   100    SINGLE-POINT  .env.example, package-lock.json
+dns-cdn      cloudflare       3     100%   100    SINGLE-POINT  .env.example, terraform/main.tf
+payments     stripe           4     100%   100    SINGLE-POINT  .env.example, package-lock.json
+ci           github-actions   4     100%   100    SINGLE-POINT  .github/workflows/ci.yml
+data         postgres         2     100%   100    SINGLE-POINT  .env.example, src/app.py
+
+Overall concentration score: 100 (SINGLE-POINT)
+Scores are concentration HEURISTICS (share^2 x 100), not risk measurements.
+
+Coverage: found terraform, kubernetes, dockerfile, package-manifest, lockfile, workflows, code-imports, env-template.
+
+$ vendormap explain examples/acme-shop --category gpu
+vendormap explain: gpu (examples/acme-shop)
+
+Verdict: SINGLE-POINT, score 100, 3 refs total.
+
+nvidia: 3 ref(s)
+  k8s/deployment.yaml (lines 16, 22)
+  src/app.py (lines 4)
+
+Second-source options for nvidia (verified 2026-11-13; re-verify before acting):
+  - AMD ROCm
+  - Intel oneAPI
+  - cloud TPUs
+Alternatives are NOT drop-in replacements and switching costs are real.
+
+$ vendormap check examples/acme-shop
+vendormap scan: examples/acme-shop
+
+CATEGORY     VENDOR           REFS  SHARE  SCORE  VERDICT       TOP FILES
+----------------------------------------------------------------------------------------------------
+cloud        aws              8     100%   100    SINGLE-POINT  .env.example, package-lock.json
+gpu          nvidia           3     100%   100    SINGLE-POINT  k8s/deployment.yaml, src/app.py
+model        openai           4     100%   100    SINGLE-POINT  .env.example, package-lock.json
+registry     ecr              3     100%   100    SINGLE-POINT  Dockerfile, k8s/deployment.yaml
+identity     auth0            4     100%   100    SINGLE-POINT  .env.example, package-lock.json
+dns-cdn      cloudflare       3     100%   100    SINGLE-POINT  .env.example, terraform/main.tf
+payments     stripe           4     100%   100    SINGLE-POINT  .env.example, package-lock.json
+ci           github-actions   4     100%   100    SINGLE-POINT  .github/workflows/ci.yml
+data         postgres         2     100%   100    SINGLE-POINT  .env.example, src/app.py
+
+Overall concentration score: 100 (SINGLE-POINT)
+Scores are concentration HEURISTICS (share^2 x 100), not risk measurements.
+
+Coverage: found terraform, kubernetes, dockerfile, package-manifest, lockfile, workflows, code-imports, env-template.
+
+Failing categories (files that prove them):
+  cloud: SINGLE-POINT score 100 - .env.example, package-lock.json, package.json, src/app.py, terraform/main.tf
+  gpu: SINGLE-POINT score 100 - k8s/deployment.yaml, src/app.py
+  model: SINGLE-POINT score 100 - .env.example, package-lock.json, package.json, src/app.py
+  registry: SINGLE-POINT score 100 - Dockerfile, k8s/deployment.yaml
+  identity: SINGLE-POINT score 100 - .env.example, package-lock.json, package.json, src/app.py
+  dns-cdn: SINGLE-POINT score 100 - .env.example, terraform/main.tf
+  payments: SINGLE-POINT score 100 - .env.example, package-lock.json, package.json, src/app.py
+  ci: SINGLE-POINT score 100 - .github/workflows/ci.yml
+  data: SINGLE-POINT score 100 - .env.example, src/app.py
+check: SINGLE-POINT (exit 2)
+exit: 2
+
+$ vendormap scan examples/diversified-shop
+vendormap scan: examples/diversified-shop
+
+CATEGORY     VENDOR           REFS  SHARE  SCORE  VERDICT       TOP FILES
+----------------------------------------------------------------------------------------------------
+cloud        aws              4     50%    25     DIVERSIFIED   terraform/main.tf
+gpu          amd              4     50%    25     DIVERSIFIED   k8s/deployment.yaml
+model        anthropic        6     50%    25     DIVERSIFIED   .env.example, package.json
+registry     docker-hub       3     67%    44     DIVERSIFIED   Dockerfile, k8s/deployment.yaml
+identity     auth0            2     50%    25     DIVERSIFIED   package.json
+dns-cdn      cloudflare       2     50%    25     DIVERSIFIED   terraform/main.tf
+payments     paypal           3     67%    44     DIVERSIFIED   .env.example, package.json
+ci           github-actions   3     67%    44     DIVERSIFIED   .github/workflows/ci.yml
+data         mongodb          2     50%    25     DIVERSIFIED   package.json
+
+Overall concentration score: 44 (DIVERSIFIED)
+Scores are concentration HEURISTICS (share^2 x 100), not risk measurements.
+
+Coverage: found terraform, kubernetes, dockerfile, package-manifest, workflows, code-imports, env-template.
+Coverage note: no lockfile found in this directory - those layers are NOT-DETECTED, not scored 0.
+
+$ vendormap check examples/diversified-shop
+vendormap scan: examples/diversified-shop
+
+CATEGORY     VENDOR           REFS  SHARE  SCORE  VERDICT       TOP FILES
+----------------------------------------------------------------------------------------------------
+cloud        aws              4     50%    25     DIVERSIFIED   terraform/main.tf
+gpu          amd              4     50%    25     DIVERSIFIED   k8s/deployment.yaml
+model        anthropic        6     50%    25     DIVERSIFIED   .env.example, package.json
+registry     docker-hub       3     67%    44     DIVERSIFIED   Dockerfile, k8s/deployment.yaml
+identity     auth0            2     50%    25     DIVERSIFIED   package.json
+dns-cdn      cloudflare       2     50%    25     DIVERSIFIED   terraform/main.tf
+payments     paypal           3     67%    44     DIVERSIFIED   .env.example, package.json
+ci           github-actions   3     67%    44     DIVERSIFIED   .github/workflows/ci.yml
+data         mongodb          2     50%    25     DIVERSIFIED   package.json
+
+Overall concentration score: 44 (DIVERSIFIED)
+Scores are concentration HEURISTICS (share^2 x 100), not risk measurements.
+
+Coverage: found terraform, kubernetes, dockerfile, package-manifest, workflows, code-imports, env-template.
+Coverage note: no lockfile found in this directory - those layers are NOT-DETECTED, not scored 0.
+
+check: DIVERSIFIED (exit 0)

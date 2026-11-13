@@ -1,0 +1,1 @@
+{"dependencies":{"@anthropic-ai/sdk":"^0.30.0","@auth0/auth0-react":"^2.0.0","@clerk/clerk-react":"^5.0.0","@paypal/checkout-server-sdk":"^1.0.0","express":"^4.18.0","mongodb":"^6.0.0","openai":"^4.0.0"},"devDependencies":{"typescript":"^5.9.3"},"name":"diversified-shop","private":true,"version":"0.1.0"}

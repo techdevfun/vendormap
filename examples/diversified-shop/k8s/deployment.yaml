@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: diversified-shop
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: diversified-shop
+  template:
+    metadata:
+      labels:
+        app: diversified-shop
+      annotations:
+        cdn.provider: fastly
+    spec:
+      nodeSelector:
+        accelerator: nvidia-tesla-t4
+      containers:
+        - name: web
+          image: ghcr.io/diversified-shop/web:latest
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              amd.com/gpu: "1"
+        - name: worker
+          image: rocm/pytorch:latest
